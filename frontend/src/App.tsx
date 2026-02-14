@@ -11,14 +11,11 @@ type Stats = {
   partidas: number;
   vitorias: number;
   derrotas: number;
-  melhorPontuacao: number;
 };
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 const STATS_STORAGE_KEY = "jw_game_stats";
-const STATS_INICIAIS: Stats = { partidas: 0, vitorias: 0, derrotas: 0, melhorPontuacao: 0 };
-const PONTOS_INICIAIS = 120;
-const CUSTO_DICAS = { dificil: 6, media: 12, facil: 20 };
+const STATS_INICIAIS: Stats = { partidas: 0, vitorias: 0, derrotas: 0 };
 const VIDAS_POR_NIVEL: Record<Nivel, number> = {
   facil: 7,
   medio: 5,
@@ -50,7 +47,6 @@ function carregarStatsLocais(): Stats {
       partidas: data.partidas ?? 0,
       vitorias: data.vitorias ?? 0,
       derrotas: data.derrotas ?? 0,
-      melhorPontuacao: data.melhorPontuacao ?? 0,
     };
   } catch {
     return STATS_INICIAIS;
@@ -61,13 +57,12 @@ function salvarStatsLocais(stats: Stats): void {
   localStorage.setItem(STATS_STORAGE_KEY, JSON.stringify(stats));
 }
 
-function atualizarStatsLocais(venceu: boolean, pontos: number): Stats {
+function atualizarStatsLocais(venceu: boolean): Stats {
   const atual = carregarStatsLocais();
   const proximas: Stats = {
     partidas: atual.partidas + 1,
     vitorias: atual.vitorias + (venceu ? 1 : 0),
     derrotas: atual.derrotas + (venceu ? 0 : 1),
-    melhorPontuacao: Math.max(atual.melhorPontuacao, pontos),
   };
   salvarStatsLocais(proximas);
   return proximas;
@@ -84,10 +79,9 @@ function App() {
   const [nivelSelecionado, setNivelSelecionado] = useState<Nivel>("medio");
   const [maxTentativas, setMaxTentativas] = useState(VIDAS_POR_NIVEL.medio);
   const [tentativas, setTentativas] = useState(VIDAS_POR_NIVEL.medio);
-  const [pontos, setPontos] = useState(PONTOS_INICIAIS);
-  const [dicasUsadas, setDicasUsadas] = useState<Set<string>>(new Set());
+  const [dicasLiberadas, setDicasLiberadas] = useState<string[]>([]);
   const [mensagem, setMensagem] = useState("Escolha uma letra no teclado virtual.");
-  const [dicaAtual, setDicaAtual] = useState("Use as dicas com estratégia.");
+  const [hintAnimToken, setHintAnimToken] = useState(0);
   const [venceu, setVenceu] = useState(false);
   const [avatarHumor, setAvatarHumor] = useState<AvatarHumor>("neutro");
   const [telaTremendo, setTelaTremendo] = useState(false);
@@ -162,6 +156,12 @@ function App() {
     window.setTimeout(() => setConfetes([]), 2200);
   }
 
+  function obterDicasPorNivel(p: Personagem, nivel: Nivel): string[] {
+    if (nivel === "facil") return [p.dica_facil, p.dica_media, p.dica_dificil];
+    if (nivel === "medio") return [p.dica_media, p.dica_dificil];
+    return [p.dica_dificil];
+  }
+
   function iniciarJogo() {
     const p = escolherPersonagem();
     const vidas = VIDAS_POR_NIVEL[nivelSelecionado];
@@ -171,10 +171,9 @@ function App() {
     setLetrasErradas(new Set());
     setMaxTentativas(vidas);
     setTentativas(vidas);
-    setPontos(PONTOS_INICIAIS);
-    setDicasUsadas(new Set());
+    setDicasLiberadas(obterDicasPorNivel(p, nivelSelecionado));
     setMensagem("Escolha uma letra no teclado virtual.");
-    setDicaAtual("");
+    setHintAnimToken((x) => x + 1);
     setAvatarHumor("neutro");
     setTela("game");
   }
@@ -187,7 +186,7 @@ function App() {
 
     if (!personagem) return;
 
-    const fallbackStats = atualizarStatsLocais(ganhou, pontos);
+    const fallbackStats = atualizarStatsLocais(ganhou);
     setStats(fallbackStats);
 
     if (!API_BASE) {
@@ -202,9 +201,9 @@ function App() {
           personagemId: personagem.id,
           nomePersonagem: personagem.nome,
           venceu: ganhou,
-          pontos,
+          pontos: 0,
           tentativasRestantes: tentativas,
-          dicasUsadas: [...dicasUsadas],
+          dicasUsadas: [],
         }),
       });
       if (res.ok) {
@@ -224,7 +223,6 @@ function App() {
       const next = new Set(letrasCorretas);
       next.add(l);
       setLetrasCorretas(next);
-      setPontos((p) => Math.min(PONTOS_INICIAIS, p + 2));
       setMensagem("Acertou uma letra.");
       reagirAvatar("feliz");
       return;
@@ -234,35 +232,10 @@ function App() {
     next.add(l);
     setLetrasErradas(next);
     setTentativas((t) => t - 1);
-    setPontos((p) => Math.max(0, p - 5));
     setMensagem("Letra incorreta.");
     reagirAvatar("triste");
     setTelaTremendo(true);
     window.setTimeout(() => setTelaTremendo(false), 320);
-  }
-
-  function usarDica(nivel: keyof typeof CUSTO_DICAS) {
-    if (!personagem) return;
-    if (dicasUsadas.has(nivel)) {
-      setMensagem("Essa dica já foi usada.");
-      return;
-    }
-
-    const custo = CUSTO_DICAS[nivel];
-    if (pontos < custo) {
-      setMensagem("Pontos insuficientes para essa dica.");
-      return;
-    }
-
-    const next = new Set(dicasUsadas);
-    next.add(nivel);
-    setDicasUsadas(next);
-    setPontos((p) => p - custo);
-
-    const texto =
-      nivel === "dificil" ? personagem.dica_dificil : nivel === "media" ? personagem.dica_media : personagem.dica_facil;
-    setDicaAtual(texto);
-    setMensagem("Dica aplicada.");
   }
 
   if (tela === "home") {
@@ -283,7 +256,7 @@ function App() {
               Difícil (3 vidas)
             </button>
           </div>
-          <p className="stats">Partidas: {stats.partidas} | Vitórias: {stats.vitorias} | Recorde: {stats.melhorPontuacao}</p>
+          <p className="stats">Partidas: {stats.partidas} | Vitórias: {stats.vitorias} | Derrotas: {stats.derrotas}</p>
           <button className="btn btn-primary" onClick={iniciarJogo}>Iniciar Jogo</button>
         </section>
       </main>
@@ -313,7 +286,6 @@ function App() {
           <h2 className={venceu ? "win" : "lose"}>{venceu ? "Vitória!" : "Derrota"}</h2>
           <div className={`avatar-wrap avatar-${avatarHumor}`}>
             <img className="avatar" src="/assets/mascote_kevin.png" alt="Mascote" />
-            <span className="avatar-face-badge">{venceu ? "😄" : "😢"}</span>
           </div>
           {venceu ? (
             <p className="result-text">
@@ -330,7 +302,7 @@ function App() {
               Referência: {personagem.referencia}
             </p>
           )}
-          <p className="score">Pontuação final: {pontos}</p>
+          <p className="score">Vidas restantes: {tentativas}/{maxTentativas}</p>
           <div className="row">
             <button className="btn btn-primary" onClick={iniciarJogo}>Jogar Novamente</button>
             <button
@@ -358,7 +330,7 @@ function App() {
         </header>
 
         <div className="status">
-          <span>Pontos: {pontos}</span>
+          <span>Nível: {nivelSelecionado.toUpperCase()}</span>
           <span>Tentativas: {tentativas}/{maxTentativas}</span>
         </div>
         <progress value={tentativas} max={maxTentativas} className="life" />
@@ -366,7 +338,6 @@ function App() {
         <div className="character-area">
           <div className={`avatar-wrap avatar-${avatarHumor}`}>
             <img className="mini-avatar" src="/assets/mascote_kevin.png" alt="Mascote" />
-            <span className="avatar-face-badge">{avatarHumor === "feliz" ? "😄" : avatarHumor === "triste" ? "😟" : "🙂"}</span>
           </div>
           <div>
             <p className="label">Quem sou eu?</p>
@@ -374,13 +345,11 @@ function App() {
           </div>
         </div>
 
-        <div className="hint-buttons">
-          <button className="btn hint" disabled={dicasUsadas.has("dificil")} onClick={() => usarDica("dificil")}>Difícil (-6)</button>
-          <button className="btn hint" disabled={dicasUsadas.has("media")} onClick={() => usarDica("media")}>Média (-12)</button>
-          <button className="btn hint" disabled={dicasUsadas.has("facil")} onClick={() => usarDica("facil")}>Fácil (-20)</button>
+        <div key={hintAnimToken} className="hint-box hint-animated">
+          {dicasLiberadas.map((dica, idx) => (
+            <p key={`${idx}-${dica}`} className="hint-line">{dica}</p>
+          ))}
         </div>
-
-        <div className="hint-box">{dicaAtual || "Sem dica por enquanto."}</div>
         <p className="message">{mensagem}</p>
 
         <div className="keyboard notranslate" translate="no">

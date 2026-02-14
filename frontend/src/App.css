@@ -78,20 +78,8 @@ h2 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-}
-
-.avatar-face-badge {
-  position: absolute;
-  right: -6px;
-  bottom: -6px;
-  width: 34px;
-  height: 34px;
-  border-radius: 999px;
-  background: #ffffff;
-  border: 2px solid #bfdbfe;
-  display: grid;
-  place-items: center;
-  font-size: 18px;
+  border-radius: 18px;
+  overflow: hidden;
 }
 
 .avatar-feliz img {
@@ -102,6 +90,10 @@ h2 {
 .avatar-triste img {
   animation: shakeFace 0.42s ease;
   filter: grayscale(0.18) brightness(0.96);
+}
+
+.avatar-neutro img {
+  animation: idleFloat 2.4s ease-in-out infinite;
 }
 
 .stats,
@@ -222,6 +214,15 @@ h2 {
   font-size: 0.94rem;
 }
 
+.hint-animated {
+  animation: hintReveal 0.48s ease;
+}
+
+.hint-line {
+  margin: 0.25rem 0;
+  color: #334155;
+}
+
 .keyboard {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -298,6 +299,12 @@ h2 {
   100% { transform: translateX(0); }
 }
 
+@keyframes idleFloat {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+  100% { transform: translateY(0); }
+}
+
 @keyframes screenShake {
   0% { transform: translateX(0); }
   25% { transform: translateX(-4px); }
@@ -309,6 +316,11 @@ h2 {
 @keyframes confettiFall {
   0% { transform: translateY(0) rotate(0deg); opacity: 1; }
   100% { transform: translateY(95vh) rotate(540deg); opacity: 0.3; }
+}
+
+@keyframes hintReveal {
+  0% { transform: translateY(8px); opacity: 0.15; }
+  100% { transform: translateY(0); opacity: 1; }
 }
 
 @media (max-width: 480px) {

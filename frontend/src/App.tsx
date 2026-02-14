@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
 import { personagens, type Personagem } from "./data";
 
@@ -92,6 +92,7 @@ function App() {
   const [avatarHumor, setAvatarHumor] = useState<AvatarHumor>("neutro");
   const [telaTremendo, setTelaTremendo] = useState(false);
   const [confetes, setConfetes] = useState<ConfeteParticula[]>([]);
+  const avatarTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     carregarStats();
@@ -144,10 +145,25 @@ function App() {
     }
   }
 
-  function reagirAvatar(humor: AvatarHumor) {
+  useEffect(() => {
+    return () => {
+      if (avatarTimerRef.current) {
+        window.clearTimeout(avatarTimerRef.current);
+      }
+    };
+  }, []);
+
+  function reagirAvatar(humor: AvatarHumor, duracaoMs = 2000) {
+    if (avatarTimerRef.current) {
+      window.clearTimeout(avatarTimerRef.current);
+      avatarTimerRef.current = null;
+    }
     setAvatarHumor(humor);
     if (humor === "neutro") return;
-    window.setTimeout(() => setAvatarHumor("neutro"), 850);
+    avatarTimerRef.current = window.setTimeout(() => {
+      setAvatarHumor("neutro");
+      avatarTimerRef.current = null;
+    }, duracaoMs);
   }
 
   function obterSrcAvatar(humor: AvatarHumor): string {
@@ -190,12 +206,20 @@ function App() {
     setDicasLiberadas(obterDicasPorNivel(p, nivelSelecionado));
     setMensagem("Escolha uma letra no teclado virtual.");
     setHintAnimToken((x) => x + 1);
+    if (avatarTimerRef.current) {
+      window.clearTimeout(avatarTimerRef.current);
+      avatarTimerRef.current = null;
+    }
     setAvatarHumor("neutro");
     setTela("game");
   }
 
   async function finalizarPartida(ganhou: boolean) {
     setVenceu(ganhou);
+    if (avatarTimerRef.current) {
+      window.clearTimeout(avatarTimerRef.current);
+      avatarTimerRef.current = null;
+    }
     setAvatarHumor(ganhou ? "feliz" : "triste");
     setTela("result");
     if (ganhou) estourarConfete();
@@ -240,16 +264,34 @@ function App() {
       next.add(l);
       setLetrasCorretas(next);
       setMensagem("Acertou uma letra.");
-      reagirAvatar("feliz");
+      const venceuComEsseAcerto = [...letrasNome].every((c) => next.has(c));
+      if (venceuComEsseAcerto) {
+        if (avatarTimerRef.current) {
+          window.clearTimeout(avatarTimerRef.current);
+          avatarTimerRef.current = null;
+        }
+        setAvatarHumor("feliz");
+      } else {
+        reagirAvatar("feliz", 2000);
+      }
       return;
     }
 
     const next = new Set(letrasErradas);
     next.add(l);
     setLetrasErradas(next);
-    setTentativas((t) => t - 1);
+    const tentativasRestantes = tentativas - 1;
+    setTentativas(tentativasRestantes);
     setMensagem("Letra incorreta.");
-    reagirAvatar("triste");
+    if (tentativasRestantes <= 0) {
+      if (avatarTimerRef.current) {
+        window.clearTimeout(avatarTimerRef.current);
+        avatarTimerRef.current = null;
+      }
+      setAvatarHumor("triste");
+    } else {
+      reagirAvatar("triste", 2000);
+    }
     setTelaTremendo(true);
     window.setTimeout(() => setTelaTremendo(false), 320);
   }

@@ -19,6 +19,8 @@ body {
   align-items: center;
   justify-content: center;
   padding: 1rem;
+  position: relative;
+  overflow: hidden;
 }
 
 .card {
@@ -71,6 +73,37 @@ h2 {
   background: #dce8f8;
 }
 
+.avatar-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-face-badge {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 2px solid #bfdbfe;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+}
+
+.avatar-feliz img {
+  animation: bounceFace 0.5s ease;
+  filter: saturate(1.08);
+}
+
+.avatar-triste img {
+  animation: shakeFace 0.42s ease;
+  filter: grayscale(0.18) brightness(0.96);
+}
+
 .stats,
 .result-text,
 .message,
@@ -103,6 +136,13 @@ h2 {
   color: white;
 }
 
+.nivel-selector {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.4rem;
+  margin: 0.5rem 0;
+}
+
 .row {
   display: flex;
   gap: 0.6rem;
@@ -114,6 +154,10 @@ h2 {
   display: flex;
   flex-direction: column;
   gap: 0.7rem;
+}
+
+.screen-shake {
+  animation: screenShake 0.3s ease-in-out;
 }
 
 .topbar {
@@ -191,6 +235,9 @@ h2 {
   background: #ffffff;
   color: #4a6da7;
   font-weight: 700;
+  font-family: "Consolas", "Courier New", monospace;
+  text-transform: uppercase;
+  font-variant-ligatures: none;
   box-shadow: inset 0 0 0 1px #cbd5e1;
   cursor: pointer;
 }
@@ -213,6 +260,55 @@ h2 {
 
 .lose {
   color: #dc2626;
+}
+
+.notranslate {
+  translate: no;
+}
+
+.confetti-layer {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -12px;
+  width: 10px;
+  height: 16px;
+  border-radius: 2px;
+  opacity: 0.95;
+  animation-name: confettiFall;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
+}
+
+@keyframes bounceFace {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+@keyframes shakeFace {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  50% { transform: translateX(2px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes screenShake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-2px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes confettiFall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(95vh) rotate(540deg); opacity: 0.3; }
 }
 
 @media (max-width: 480px) {

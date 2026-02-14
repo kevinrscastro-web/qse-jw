@@ -3,6 +3,9 @@ import "./App.css";
 import { personagens, type Personagem } from "./data";
 
 type Tela = "home" | "game" | "result";
+type Nivel = "facil" | "medio" | "dificil";
+type AvatarHumor = "neutro" | "feliz" | "triste";
+type ConfeteParticula = { id: number; left: string; delay: string; duration: string; hue: number };
 
 type Stats = {
   partidas: number;
@@ -14,9 +17,19 @@ type Stats = {
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 const STATS_STORAGE_KEY = "jw_game_stats";
 const STATS_INICIAIS: Stats = { partidas: 0, vitorias: 0, derrotas: 0, melhorPontuacao: 0 };
-const MAX_TENTATIVAS = 5;
 const PONTOS_INICIAIS = 120;
 const CUSTO_DICAS = { dificil: 6, media: 12, facil: 20 };
+const VIDAS_POR_NIVEL: Record<Nivel, number> = {
+  facil: 7,
+  medio: 5,
+  dificil: 3,
+};
+const TECLAS = [
+  "A", "B", "C", "D", "E", "F", "G",
+  "H", "I", "J", "K", "L", "M", "N",
+  "O", "P", "Q", "R", "S", "T", "U",
+  "V", "W", "X", "Y", "Z",
+];
 
 const normalizar = (texto: string) =>
   texto
@@ -68,12 +81,17 @@ function App() {
   const [nomeNormalizado, setNomeNormalizado] = useState("");
   const [letrasCorretas, setLetrasCorretas] = useState<Set<string>>(new Set());
   const [letrasErradas, setLetrasErradas] = useState<Set<string>>(new Set());
-  const [tentativas, setTentativas] = useState(MAX_TENTATIVAS);
+  const [nivelSelecionado, setNivelSelecionado] = useState<Nivel>("medio");
+  const [maxTentativas, setMaxTentativas] = useState(VIDAS_POR_NIVEL.medio);
+  const [tentativas, setTentativas] = useState(VIDAS_POR_NIVEL.medio);
   const [pontos, setPontos] = useState(PONTOS_INICIAIS);
   const [dicasUsadas, setDicasUsadas] = useState<Set<string>>(new Set());
   const [mensagem, setMensagem] = useState("Escolha uma letra no teclado virtual.");
   const [dicaAtual, setDicaAtual] = useState("Use as dicas com estratégia.");
   const [venceu, setVenceu] = useState(false);
+  const [avatarHumor, setAvatarHumor] = useState<AvatarHumor>("neutro");
+  const [telaTremendo, setTelaTremendo] = useState(false);
+  const [confetes, setConfetes] = useState<ConfeteParticula[]>([]);
 
   useEffect(() => {
     carregarStats();
@@ -126,23 +144,46 @@ function App() {
     }
   }
 
+  function reagirAvatar(humor: AvatarHumor) {
+    setAvatarHumor(humor);
+    if (humor === "neutro") return;
+    window.setTimeout(() => setAvatarHumor("neutro"), 850);
+  }
+
+  function estourarConfete() {
+    const itens: ConfeteParticula[] = Array.from({ length: 26 }).map((_, index) => ({
+      id: Date.now() + index,
+      left: `${Math.random() * 100}%`,
+      delay: `${Math.random() * 0.25}s`,
+      duration: `${1.2 + Math.random() * 1.1}s`,
+      hue: Math.floor(Math.random() * 360),
+    }));
+    setConfetes(itens);
+    window.setTimeout(() => setConfetes([]), 2200);
+  }
+
   function iniciarJogo() {
     const p = escolherPersonagem();
+    const vidas = VIDAS_POR_NIVEL[nivelSelecionado];
     setPersonagem(p);
     setNomeNormalizado(normalizar(p.nome));
     setLetrasCorretas(new Set());
     setLetrasErradas(new Set());
-    setTentativas(MAX_TENTATIVAS);
+    setMaxTentativas(vidas);
+    setTentativas(vidas);
     setPontos(PONTOS_INICIAIS);
     setDicasUsadas(new Set());
     setMensagem("Escolha uma letra no teclado virtual.");
     setDicaAtual("");
+    setAvatarHumor("neutro");
     setTela("game");
   }
 
   async function finalizarPartida(ganhou: boolean) {
     setVenceu(ganhou);
+    setAvatarHumor(ganhou ? "feliz" : "triste");
     setTela("result");
+    if (ganhou) estourarConfete();
 
     if (!personagem) return;
 
@@ -185,6 +226,7 @@ function App() {
       setLetrasCorretas(next);
       setPontos((p) => Math.min(PONTOS_INICIAIS, p + 2));
       setMensagem("Acertou uma letra.");
+      reagirAvatar("feliz");
       return;
     }
 
@@ -194,6 +236,9 @@ function App() {
     setTentativas((t) => t - 1);
     setPontos((p) => Math.max(0, p - 5));
     setMensagem("Letra incorreta.");
+    reagirAvatar("triste");
+    setTelaTremendo(true);
+    window.setTimeout(() => setTelaTremendo(false), 320);
   }
 
   function usarDica(nivel: keyof typeof CUSTO_DICAS) {
@@ -227,6 +272,17 @@ function App() {
           <h1>QUEM SOU EU BÍBLICO</h1>
           <span className="badge">Edição JW</span>
           <img className="avatar" src="/assets/mascote_kevin.png" alt="Mascote" />
+          <div className="nivel-selector">
+            <button className={`btn ${nivelSelecionado === "facil" ? "btn-primary" : ""}`} onClick={() => setNivelSelecionado("facil")}>
+              Fácil (7 vidas)
+            </button>
+            <button className={`btn ${nivelSelecionado === "medio" ? "btn-primary" : ""}`} onClick={() => setNivelSelecionado("medio")}>
+              Médio (5 vidas)
+            </button>
+            <button className={`btn ${nivelSelecionado === "dificil" ? "btn-primary" : ""}`} onClick={() => setNivelSelecionado("dificil")}>
+              Difícil (3 vidas)
+            </button>
+          </div>
           <p className="stats">Partidas: {stats.partidas} | Vitórias: {stats.vitorias} | Recorde: {stats.melhorPontuacao}</p>
           <button className="btn btn-primary" onClick={iniciarJogo}>Iniciar Jogo</button>
         </section>
@@ -237,9 +293,28 @@ function App() {
   if (tela === "result" && personagem) {
     return (
       <main className="screen">
+        {venceu && (
+          <div className="confetti-layer" aria-hidden="true">
+            {confetes.map((item) => (
+              <span
+                key={item.id}
+                className="confetti-piece"
+                style={{
+                  left: item.left,
+                  animationDelay: item.delay,
+                  animationDuration: item.duration,
+                  backgroundColor: `hsl(${item.hue} 90% 55%)`,
+                }}
+              />
+            ))}
+          </div>
+        )}
         <section className="card result-card">
           <h2 className={venceu ? "win" : "lose"}>{venceu ? "Vitória!" : "Derrota"}</h2>
-          <img className="avatar" src="/assets/mascote_kevin.png" alt="Mascote" />
+          <div className={`avatar-wrap avatar-${avatarHumor}`}>
+            <img className="avatar" src="/assets/mascote_kevin.png" alt="Mascote" />
+            <span className="avatar-face-badge">{venceu ? "😄" : "😢"}</span>
+          </div>
           {venceu ? (
             <p className="result-text">
               Personagem: {personagem.nome}
@@ -275,7 +350,7 @@ function App() {
 
   return (
     <main className="screen">
-      <section className="card game-card">
+      <section className={`card game-card ${telaTremendo ? "screen-shake" : ""}`}>
         <header className="topbar">
           <button className="icon-btn" onClick={() => setTela("home")}>←</button>
           <strong>Quem Sou Eu Bíblico</strong>
@@ -284,12 +359,15 @@ function App() {
 
         <div className="status">
           <span>Pontos: {pontos}</span>
-          <span>Tentativas: {tentativas}/{MAX_TENTATIVAS}</span>
+          <span>Tentativas: {tentativas}/{maxTentativas}</span>
         </div>
-        <progress value={tentativas} max={MAX_TENTATIVAS} className="life" />
+        <progress value={tentativas} max={maxTentativas} className="life" />
 
         <div className="character-area">
-          <img className="mini-avatar" src="/assets/mascote_kevin.png" alt="Mascote" />
+          <div className={`avatar-wrap avatar-${avatarHumor}`}>
+            <img className="mini-avatar" src="/assets/mascote_kevin.png" alt="Mascote" />
+            <span className="avatar-face-badge">{avatarHumor === "feliz" ? "😄" : avatarHumor === "triste" ? "😟" : "🙂"}</span>
+          </div>
           <div>
             <p className="label">Quem sou eu?</p>
             <p className="word">{mascaraNome}</p>
@@ -305,8 +383,8 @@ function App() {
         <div className="hint-box">{dicaAtual || "Sem dica por enquanto."}</div>
         <p className="message">{mensagem}</p>
 
-        <div className="keyboard">
-          {"ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map((letra) => {
+        <div className="keyboard notranslate" translate="no">
+          {TECLAS.map((letra) => {
             const used = letrasCorretas.has(letra) || letrasErradas.has(letra);
             const status = letrasCorretas.has(letra) ? "ok" : letrasErradas.has(letra) ? "bad" : "";
             return (
@@ -315,6 +393,7 @@ function App() {
                 className={`key ${status}`}
                 disabled={used}
                 onClick={() => tentarLetra(letra)}
+                translate="no"
               >
                 {letra}
               </button>

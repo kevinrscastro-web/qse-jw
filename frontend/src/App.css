@@ -58,16 +58,16 @@ h2 {
 }
 
 .avatar {
-  width: 180px;
-  height: 180px;
-  border-radius: 999px;
+  width: 220px;
+  height: 220px;
+  border-radius: 18px;
   object-fit: cover;
   background: #dce8f8;
 }
 
 .mini-avatar {
-  width: 100px;
-  height: 100px;
+  width: 110px;
+  height: 110px;
   border-radius: 16px;
   object-fit: cover;
   background: #dce8f8;
@@ -84,12 +84,12 @@ h2 {
 
 .avatar-feliz img {
   animation: bounceFace 0.5s ease;
-  filter: saturate(1.08);
+  filter: saturate(1.1) drop-shadow(0 0 8px rgba(22, 163, 74, 0.4));
 }
 
 .avatar-triste img {
   animation: shakeFace 0.42s ease;
-  filter: grayscale(0.18) brightness(0.96);
+  filter: saturate(0.95) drop-shadow(0 0 8px rgba(220, 38, 38, 0.45));
 }
 
 .avatar-neutro img {

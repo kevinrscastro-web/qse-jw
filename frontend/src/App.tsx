@@ -27,6 +27,12 @@ const TECLAS = [
   "O", "P", "Q", "R", "S", "T", "U",
   "V", "W", "X", "Y", "Z",
 ];
+const AVATAR_ASSETS = {
+  neutro: "/assets/avatar_padrao.png",
+  feliz: "/assets/avatar_acerto.png",
+  triste: "/assets/avatar_erro.png",
+  fallback: "/assets/mascote_kevin.png",
+} as const;
 
 const normalizar = (texto: string) =>
   texto
@@ -144,6 +150,16 @@ function App() {
     window.setTimeout(() => setAvatarHumor("neutro"), 850);
   }
 
+  function obterSrcAvatar(humor: AvatarHumor): string {
+    return AVATAR_ASSETS[humor] ?? AVATAR_ASSETS.fallback;
+  }
+
+  function onAvatarError(event: React.SyntheticEvent<HTMLImageElement>) {
+    const img = event.currentTarget;
+    img.onerror = null;
+    img.src = AVATAR_ASSETS.fallback;
+  }
+
   function estourarConfete() {
     const itens: ConfeteParticula[] = Array.from({ length: 26 }).map((_, index) => ({
       id: Date.now() + index,
@@ -244,7 +260,12 @@ function App() {
         <section className="card home-card">
           <h1>QUEM SOU EU BÍBLICO</h1>
           <span className="badge">Edição JW</span>
-          <img className="avatar" src="/assets/mascote_kevin.png" alt="Mascote" />
+          <img
+            className="avatar"
+            src={obterSrcAvatar("neutro")}
+            alt="Mascote"
+            onError={onAvatarError}
+          />
           <div className="nivel-selector">
             <button className={`btn ${nivelSelecionado === "facil" ? "btn-primary" : ""}`} onClick={() => setNivelSelecionado("facil")}>
               Fácil (7 vidas)
@@ -285,7 +306,12 @@ function App() {
         <section className="card result-card">
           <h2 className={venceu ? "win" : "lose"}>{venceu ? "Vitória!" : "Derrota"}</h2>
           <div className={`avatar-wrap avatar-${avatarHumor}`}>
-            <img className="avatar" src="/assets/mascote_kevin.png" alt="Mascote" />
+            <img
+              className="avatar"
+              src={obterSrcAvatar(avatarHumor)}
+              alt="Mascote"
+              onError={onAvatarError}
+            />
           </div>
           {venceu ? (
             <p className="result-text">
@@ -337,7 +363,12 @@ function App() {
 
         <div className="character-area">
           <div className={`avatar-wrap avatar-${avatarHumor}`}>
-            <img className="mini-avatar" src="/assets/mascote_kevin.png" alt="Mascote" />
+            <img
+              className="mini-avatar"
+              src={obterSrcAvatar(avatarHumor)}
+              alt="Mascote"
+              onError={onAvatarError}
+            />
           </div>
           <div>
             <p className="label">Quem sou eu?</p>

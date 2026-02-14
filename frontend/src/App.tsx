@@ -300,8 +300,8 @@ function App() {
     return (
       <main className="screen">
         <section className="card home-card">
-          <h1>QUEM SOU EU BÍBLICO</h1>
-          <span className="badge">Edição JW</span>
+          <h1>QUEM SOU EU ?</h1>
+          <span className="badge">Edição bíblica</span>
           <img
             className="avatar"
             src={obterSrcAvatar("neutro")}

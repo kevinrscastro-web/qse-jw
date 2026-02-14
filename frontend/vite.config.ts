@@ -10,7 +10,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['apple-touch-icon.png'],
       manifest: {
-        name: 'Quem Sou Eu Bíblico - Edição JW',
+        name: 'Quem Sou Eu ? - Edição bíblica',
         short_name: 'QSE Bíblico',
         description: 'Jogo bíblico educativo em estilo forca/quiz.',
         theme_color: '#4A6DA7',

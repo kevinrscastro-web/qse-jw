@@ -1,0 +1,230 @@
+﻿:root {
+  font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+  color: #333333;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at 20% 10%, #f8fbff 0%, #eef2f6 55%, #dde6f0 100%);
+}
+
+.screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.card {
+  width: min(430px, 100%);
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 12px 32px rgba(74, 109, 167, 0.18);
+  padding: 1rem;
+}
+
+.home-card,
+.result-card {
+  text-align: center;
+}
+
+h1 {
+  margin: 0;
+  font-size: 2rem;
+  color: #4a6da7;
+}
+
+h2 {
+  margin: 0.4rem 0;
+  font-size: 2rem;
+}
+
+.badge {
+  display: inline-block;
+  background: #dbeafe;
+  color: #1d4ed8;
+  border-radius: 10px;
+  padding: 0.4rem 0.8rem;
+  font-weight: 700;
+  margin: 0.8rem 0;
+}
+
+.avatar {
+  width: 180px;
+  height: 180px;
+  border-radius: 999px;
+  object-fit: cover;
+  background: #dce8f8;
+}
+
+.mini-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 16px;
+  object-fit: cover;
+  background: #dce8f8;
+}
+
+.stats,
+.result-text,
+.message,
+.label {
+  color: #475569;
+}
+
+.score {
+  font-weight: 700;
+  color: #4a6da7;
+}
+
+.btn {
+  border: none;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  background: #e2e8f0;
+  color: #334155;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: #3b82f6;
+  color: white;
+}
+
+.row {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.game-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.icon-btn {
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  background: #e2e8f0;
+  cursor: pointer;
+}
+
+.status {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  color: #334155;
+}
+
+.life {
+  width: 100%;
+  height: 12px;
+}
+
+.character-area {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  background: #f8fafc;
+  border-radius: 14px;
+  padding: 0.6rem;
+}
+
+.word {
+  margin: 0;
+  font-size: 1.6rem;
+  color: #4a6da7;
+  font-weight: 800;
+}
+
+.hint-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+}
+
+.hint {
+  background: #3b82f6;
+  color: white;
+}
+
+.hint-box {
+  min-height: 48px;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 0.7rem;
+  font-size: 0.94rem;
+}
+
+.keyboard {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.key {
+  border: none;
+  border-radius: 10px;
+  height: 38px;
+  background: #ffffff;
+  color: #4a6da7;
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px #cbd5e1;
+  cursor: pointer;
+}
+
+.key.ok {
+  background: #16a34a;
+  color: #fff;
+  box-shadow: none;
+}
+
+.key.bad {
+  background: #dc2626;
+  color: #fff;
+  box-shadow: none;
+}
+
+.win {
+  color: #16a34a;
+}
+
+.lose {
+  color: #dc2626;
+}
+
+@media (max-width: 480px) {
+  .word {
+    font-size: 1.35rem;
+  }
+
+  .hint-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .keyboard {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}

@@ -1,41 +1,32 @@
-﻿# Quem Sou Eu Bíblico - Edição JW
+﻿# Quem Sou Eu Biblico - Edicao JW
 
-Stack atual:
+Stack:
 - Frontend: React + TypeScript (Vite)
-- Backend: Node.js + TypeScript + Express
-- Banco: SQLite (`jw_game.db`)
+- Backend opcional: Node.js + TypeScript + Express
 
 ## Estrutura
-- `frontend/` interface web
-- `backend/` API + SQLite
-- `render.yaml` blueprint de deploy no Render
+- `frontend/` app web (pronto para Vercel)
+- `backend/` API + SQLite (opcional)
 
 ## Rodar localmente
-Na raiz `quem_sou_eu_jw`:
+Na raiz:
 
 ```bash
 npm run dev
 ```
 
-URLs locais:
-- Frontend: `http://localhost:5173`
-- API: `http://localhost:3001`
+## Deploy no Vercel (somente frontend)
+1. Importe o repositorio no Vercel.
+2. Em **Project Settings** defina:
+   - **Root Directory**: `frontend`
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+3. Deploy.
 
-## Build
-```bash
-npm run build
-```
+### Estatisticas no Vercel
+- Sem backend, o jogo salva estatisticas no `localStorage` do navegador.
+- Se quiser usar API, configure no Vercel a env var:
+  - `VITE_API_BASE_URL=https://sua-api.com/api`
 
-## Deploy no Render
-1. Suba este projeto para um repositório GitHub.
-2. No Render, escolha **New +** > **Blueprint** e selecione o repositório.
-3. O Render vai ler `render.yaml` e criar:
-   - `jw-biblico-api` (Web Service)
-   - `jw-biblico-web` (Static Site)
-4. Após criar, ajuste se necessário:
-   - `ALLOWED_ORIGINS` (backend) para a URL final do frontend.
-   - `VITE_API_BASE_URL` (frontend) para a URL final da API + `/api`.
-
-## Observação de persistência
-- A API usa disco persistente em `/data` no Render.
-- O SQLite fica em `/data/jw_game.db`.
+## Deploy no Render (backend + frontend)
+- O arquivo `render.yaml` continua disponivel para deploy completo no Render.

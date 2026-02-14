@@ -11,7 +11,9 @@ type Stats = {
   melhorPontuacao: number;
 };
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3001/api";
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
+const STATS_STORAGE_KEY = "jw_game_stats";
+const STATS_INICIAIS: Stats = { partidas: 0, vitorias: 0, derrotas: 0, melhorPontuacao: 0 };
 const MAX_TENTATIVAS = 5;
 const PONTOS_INICIAIS = 120;
 const CUSTO_DICAS = { dificil: 6, media: 12, facil: 20 };
@@ -26,9 +28,41 @@ function escolherPersonagem(): Personagem {
   return personagens[Math.floor(Math.random() * personagens.length)];
 }
 
+function carregarStatsLocais(): Stats {
+  try {
+    const bruto = localStorage.getItem(STATS_STORAGE_KEY);
+    if (!bruto) return STATS_INICIAIS;
+    const data = JSON.parse(bruto) as Partial<Stats>;
+    return {
+      partidas: data.partidas ?? 0,
+      vitorias: data.vitorias ?? 0,
+      derrotas: data.derrotas ?? 0,
+      melhorPontuacao: data.melhorPontuacao ?? 0,
+    };
+  } catch {
+    return STATS_INICIAIS;
+  }
+}
+
+function salvarStatsLocais(stats: Stats): void {
+  localStorage.setItem(STATS_STORAGE_KEY, JSON.stringify(stats));
+}
+
+function atualizarStatsLocais(venceu: boolean, pontos: number): Stats {
+  const atual = carregarStatsLocais();
+  const proximas: Stats = {
+    partidas: atual.partidas + 1,
+    vitorias: atual.vitorias + (venceu ? 1 : 0),
+    derrotas: atual.derrotas + (venceu ? 0 : 1),
+    melhorPontuacao: Math.max(atual.melhorPontuacao, pontos),
+  };
+  salvarStatsLocais(proximas);
+  return proximas;
+}
+
 function App() {
   const [tela, setTela] = useState<Tela>("home");
-  const [stats, setStats] = useState<Stats>({ partidas: 0, vitorias: 0, derrotas: 0, melhorPontuacao: 0 });
+  const [stats, setStats] = useState<Stats>(STATS_INICIAIS);
 
   const [personagem, setPersonagem] = useState<Personagem | null>(null);
   const [nomeNormalizado, setNomeNormalizado] = useState("");
@@ -74,13 +108,21 @@ function App() {
   }, [letrasCorretas, tentativas, tela, personagem, letrasNome]);
 
   async function carregarStats() {
+    if (!API_BASE) {
+      setStats(carregarStatsLocais());
+      return;
+    }
+
     try {
       const res = await fetch(`${API_BASE}/stats`);
-      if (!res.ok) return;
+      if (!res.ok) {
+        setStats(carregarStatsLocais());
+        return;
+      }
       const data = (await res.json()) as Stats;
       setStats(data);
     } catch {
-      // Sem API ativa, segue offline.
+      setStats(carregarStatsLocais());
     }
   }
 
@@ -104,8 +146,15 @@ function App() {
 
     if (!personagem) return;
 
+    const fallbackStats = atualizarStatsLocais(ganhou, pontos);
+    setStats(fallbackStats);
+
+    if (!API_BASE) {
+      return;
+    }
+
     try {
-      await fetch(`${API_BASE}/matches`, {
+      const res = await fetch(`${API_BASE}/matches`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -117,9 +166,11 @@ function App() {
           dicasUsadas: [...dicasUsadas],
         }),
       });
-      await carregarStats();
+      if (res.ok) {
+        await carregarStats();
+      }
     } catch {
-      // Modo offline
+      // sem API ativa: mantém localStorage
     }
   }
 
